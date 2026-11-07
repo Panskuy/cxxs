@@ -1,0 +1,7 @@
+.nf { min-height: 60svh; display: grid; justify-items: center; align-content: center; gap: 14px; padding: 64px var(--pad); text-align: center; }
+.nf__code { font-size: clamp(72px, 14vw, 140px); font-weight: 800; letter-spacing: -.06em; line-height: 1; color: var(--accent); }
+.nf h1 { font-size: clamp(24px, 3.4vw, 34px); } .nf__sub { color: var(--muted); max-width: 52ch; overflow-wrap: anywhere; } .nf__sub code { font-family: var(--mono); font-size: .9em; background: var(--bg-3); padding: 1px 6px; border-radius: 5px; }
+.nf__search { display: flex; align-items: center; gap: 10px; width: min(460px, 100%); margin: 12px 0 4px; padding: 5px 5px 5px 14px; border: 1px solid var(--line-2); border-radius: 12px; background: var(--bg); color: var(--muted); }
+.nf__search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(var(--accent-rgb), .13); } .nf__search svg { width: 18px; height: 18px; flex: none; }
+.nf__search input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font: inherit; color: var(--text); } .nf__search .btn-p { flex-direction: row; padding: 9px 16px; }
+.nf__links { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }

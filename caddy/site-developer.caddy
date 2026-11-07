@@ -1,0 +1,39 @@
+# Dibuat oleh setup-developer.sh. Portal developer: developer.cxxs.my.id
+developer.cxxs.my.id {
+	root * /var/www/html
+	encode zstd gzip
+	import secure_headers
+	import api_proxy
+	header X-Robots-Tag "noindex, nofollow"
+
+	# Alamat lama /developers/... -> alamat bersih
+	redir /developers / permanent
+	@old path /developers/*
+	handle @old {
+		route {
+			uri strip_prefix /developers
+			redir {uri} permanent
+		}
+	}
+
+	# File bersama yang dipakai halaman developer
+	@shared path /favicon.svg /favicon.ico /robots.txt /assets/*
+	handle @shared {
+		file_server
+	}
+
+	handle / {
+		rewrite * /developers/
+		file_server
+	}
+	@apps path /apps /apps/
+	handle @apps {
+		rewrite * /developers/apps/
+		file_server
+	}
+
+	# Selain portal developer, semuanya ada di situs utama
+	handle {
+		redir https://cxxs.my.id{uri} permanent
+	}
+}

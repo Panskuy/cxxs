@@ -1,0 +1,8 @@
+# Dibuat oleh setup-developer.sh. Alamat lama /developers/... pindah ke subdomain.
+@developers_old path /developers /developers/*
+handle @developers_old {
+	route {
+		uri strip_prefix /developers
+		redir https://developer.cxxs.my.id{uri} permanent
+	}
+}

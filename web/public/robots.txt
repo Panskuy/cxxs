@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /account/
+Disallow: /verify/
+Disallow: /login/
+Disallow: /reset/
+Allow: /
+Sitemap: https://cxxs.my.id/sitemap.xml

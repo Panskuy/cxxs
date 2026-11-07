@@ -1,0 +1,19 @@
+:root {
+  /* Desktop wallpaper the notch sits on: blue into violet, like the app's own settings preview */
+  --wall: repeating-linear-gradient(112deg, rgba(255,255,255,.035) 0 2px, transparent 2px 22px),
+          radial-gradient(ellipse at 85% 115%, rgba(190,96,255,.55), transparent 58%),
+          linear-gradient(135deg, #1f3a9c 0%, #3a36a4 50%, #5b2a8e 100%);
+}
+
+/* The live notch and its still frames */
+.nd { position: absolute; inset: 0; overflow: hidden; }
+.nd__wall { position: absolute; inset: 0; background: var(--wall); }
+.nd__canvas { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.nd__shadow { position: absolute; pointer-events: none; }
+.nd__svg { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.nd__hit { position: absolute; top: 0; z-index: 3; cursor: default; }
+.nshot { position: relative; width: 100%; overflow: hidden; border-radius: 14px; }
+.nshot .nd { position: relative; inset: auto; }
+.eq { transform-box: fill-box; transform-origin: center; animation: eq .9s ease-in-out infinite alternate; }
+@keyframes eq { from { transform: scaleY(.3); } to { transform: scaleY(1); } }
+@media (prefers-reduced-motion: reduce) { .eq { animation: none; } }

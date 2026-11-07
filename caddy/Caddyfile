@@ -1,0 +1,91 @@
+# Disalin ke /etc/caddy/Caddyfile oleh setup-caddy.sh. HTTPS (Let's Encrypt) diurus Caddy sendiri.
+# Subdomain developer: file di /etc/caddy/sites/ dibuat oleh setup-developer.sh.
+
+(secure_headers) {
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Strict-Transport-Security "max-age=15552000"
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://raw.githubusercontent.com https://user-images.githubusercontent.com https://private-user-images.githubusercontent.com https://camo.githubusercontent.com https://opengraph.githubassets.com https://github.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		-Server
+	}
+	# File Vite bernama hash: aman di-cache lama
+	@assets path /assets/*
+	header @assets Cache-Control "public, max-age=31536000, immutable"
+}
+
+# API lokal. X-Real-IP diisi dari koneksi asli (klien tidak bisa memalsukannya).
+(to_api) {
+	reverse_proxy 127.0.0.1:3000 {
+		header_up X-Real-IP {remote_host}
+		header_up -X-Forwarded-For
+		transport http {
+			response_header_timeout 15s
+		}
+	}
+}
+(api_proxy) {
+	handle /api/* {
+		import to_api
+	}
+}
+
+www.cxxs.my.id {
+	redir https://cxxs.my.id{uri} permanent
+}
+
+cxxs.my.id {
+	root * /var/www/html
+	encode zstd gzip
+	import secure_headers
+
+	# Diisi setup-developer.sh: /developers/* -> developer.cxxs.my.id (tidak ada file = tidak ada pengalihan)
+	import /etc/caddy/sites/main-*.caddy
+
+	import api_proxy
+
+	# Halaman akun/admin tidak untuk mesin pencari
+	@private path /admin /admin/* /account /account/* /login /login/* /verify /verify/* /reset /reset/*
+	header @private X-Robots-Tag "noindex, nofollow"
+
+	# SEO: sitemap dibuat API dari katalog
+	handle /sitemap.xml {
+		rewrite * /api/seo/sitemap
+		import to_api
+	}
+
+	# /apps/<slug>/: API menyisipkan <title>, deskripsi, canonical, OG dan JSON-LD ke halaman bersama
+	@app path_regexp app ^/apps/([a-z0-9-]+)/?$
+	handle @app {
+		rewrite * /api/seo/app/{re.app.1}
+		import to_api
+	}
+
+	handle {
+		file_server
+	}
+
+	# Halaman 404 sendiri (API tetap menjawab JSON)
+	handle_errors {
+		@missing expression {err.status_code} in [403, 404]
+		handle @missing {
+			root * /var/www/html
+			rewrite * /404.html
+			file_server
+		}
+		# API mati: halaman aplikasi tetap tampil (tanpa meta khusus)
+		@appdown {
+			path_regexp ^/apps/[a-z0-9-]+/?$
+			expression {err.status_code} in [502, 503, 504]
+		}
+		handle @appdown {
+			root * /var/www/html
+			rewrite * /apps/index.html
+			file_server
+		}
+	}
+}
+
+import /etc/caddy/sites/site-*.caddy

@@ -1,0 +1,19 @@
+# Dependencies and build output
+node_modules/
+dist/
+
+# Secrets: never commit. Copy api/.env.example to api/.env on each server.
+.env
+.env.*
+!.env.example
+*.save
+*.pem
+*.key
+
+# Uploaded/downloadable files and generated code
+api/private/
+api/src/generated/
+
+# Misc
+*.log
+.DS_Store

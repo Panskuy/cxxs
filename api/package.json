@@ -1,0 +1,26 @@
+{
+  "name": "portfolio-api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun --watch run src/index.ts",
+    "db:generate": "prisma generate",
+    "db:deploy": "prisma migrate deploy",
+    "user:create": "bun run scripts/create-user.ts",
+    "seed:github": "bun run scripts/seed-github.ts"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "@simplewebauthn/server": "^14.1.0",
+    "elysia": "^1.4.31",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.4",
+    "@types/pg": "^8.23.1",
+    "prisma": "7.10.1",
+    "typescript": "^7.0.2"
+  }
+}

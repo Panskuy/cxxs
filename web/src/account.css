@@ -1,0 +1,58 @@
+@import './ui.css';
+.gate { min-height: 60svh; display: grid; place-items: center; color: var(--muted); }
+.ac-page { background: var(--bg-2); min-height: 60svh; }
+.ac { padding-bottom: 80px; }
+.ac-main { max-width: 1100px; margin: 0 auto; padding: 36px var(--pad) 0; }
+.ac-hero { display: flex; align-items: center; gap: 20px; margin-bottom: 32px; }
+.ac-avatar { flex-shrink: 0; width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; font-size: 30px; font-weight: 700; color: var(--accent-ink); background: var(--accent); }
+.ac-hero .mono { display: none; }
+.ac-hero h1 { font-size: 28px; word-break: break-word; }
+.ac-sub { color: var(--muted); margin-top: 2px; word-break: break-all; }
+.ac-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.ac-grid { display: grid; grid-template-columns: 220px 1fr; gap: 32px; align-items: start; }
+.ac-nav { position: sticky; top: 92px; display: grid; gap: 2px; }
+.ac-nav a { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 9px; color: var(--muted); font-weight: 550; font-size: 14.5px; }
+.ac-nav a:hover { color: var(--text); background: var(--bg-3); } .ac-nav a svg { width: 18px; height: 18px; }
+.ac-nav a.is-danger:hover { color: var(--bad); background: var(--bad-bg); }
+.ac-cards { display: grid; gap: 16px; min-width: 0; }
+.ac-card { border: 1px solid var(--line); border-radius: var(--r-lg); padding: clamp(18px, 3vw, 28px); background: var(--bg); box-shadow: var(--shadow-1); }
+.ac-card--danger { border-color: color-mix(in srgb, var(--bad) 35%, var(--line)); }
+.ac-card__h { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 20px; }
+.ac-card__ic { flex-shrink: 0; width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; color: var(--accent); background: var(--accent-soft); } .ac-card__ic svg { width: 20px; height: 20px; }
+.ac-card--danger .ac-card__ic { color: var(--bad); background: var(--bad-bg); }
+.ac-card h2 { font-size: 18px; } .ac-card__h p { color: var(--muted); font-size: 14px; margin-top: 2px; }
+.ac-form { display: grid; max-width: 460px; } .ac-form--in { margin-top: 16px; }
+.ac-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 4px; } .ac-row--c { justify-content: center; margin-top: 22px; }
+.ac-msg { font-size: 14px; min-height: 1.2em; } .ac-msg.ok { color: var(--ok); } .ac-msg.err { color: var(--bad); }
+.ac-btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border: 1px solid var(--line-2); border-radius: 10px; font-weight: 600; font-size: 14px; background: var(--bg); box-shadow: var(--shadow-1); }
+.ac-btn:hover:not(:disabled) { background: var(--bg-2); } .ac-btn:disabled { opacity: .5; cursor: not-allowed; } .ac-btn svg { width: 16px; height: 16px; }
+.ac-btn--p { background: var(--accent); color: var(--accent-ink); border-color: transparent; } .ac-btn--p:hover:not(:disabled) { background: var(--accent); filter: brightness(1.07); }
+.ac-btn--danger { background: var(--bad); border-color: transparent; color: #fff; } .ac-btn--danger:hover:not(:disabled) { background: var(--bad); filter: brightness(1.08); }
+.ac-btn--sm { padding: 5px 11px; font-size: 13px; }
+.ac-split { height: 1px; background: var(--line); margin: 24px 0 18px; }
+.ac-line { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.ac-k { color: var(--muted); font-size: 12px; font-family: var(--sans); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+.ac-v { word-break: break-all; font-weight: 550; margin-top: 2px; }
+.ac-empty { color: var(--muted); } .ac-empty a { color: var(--accent); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.ac-list { list-style: none; display: grid; gap: 8px; margin-bottom: 14px; }
+.ac-list li { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; }
+.ac-list li.is-current { border-color: rgba(var(--accent-rgb), .45); background: rgba(var(--accent-rgb), .05); }
+.ac-list__ic { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; color: var(--accent); background: var(--accent-soft); } .ac-list__ic svg { width: 20px; height: 20px; }
+.ac-list__tx { display: grid; flex: 1; min-width: 0; gap: 2px; } .ac-list__tx b { font-weight: 600; }
+.ac-list__tx .mono { color: var(--muted); font-size: 13px; font-family: var(--sans); text-transform: none; letter-spacing: 0; }
+.ac-gate { min-height: 70svh; display: grid; place-items: center; padding: 40px 20px; background: var(--bg-2); }
+.ac-gate__card { width: min(440px, 100%); text-align: center; border: 1px solid var(--line); border-radius: 22px; padding: clamp(26px, 5vw, 40px); background: var(--bg); box-shadow: var(--shadow-2); }
+.ac-gate__card .lm__ic { margin: 0 auto 16px; } .ac-gate__card h1 { font-size: 24px; } .ac-gate__card p { color: var(--muted); margin-top: 10px; }
+.ac-gate__card .ac-back { display: inline-block; margin-top: 22px; color: var(--muted); } .ac-gate__card .ac-back:hover { color: var(--accent); }
+.ac-badge { display: inline-block; margin-left: 8px; padding: 1px 9px; border-radius: 999px; font-size: 12px; vertical-align: middle; font-family: var(--sans); text-transform: none; letter-spacing: 0; font-weight: 600; }
+.ac-badge.ok { color: var(--ok); background: var(--ok-bg); } .ac-badge.warn { color: var(--warn); background: var(--warn-bg); }
+.ac-note { margin-top: 16px; padding: 14px 16px; border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent); background: var(--warn-bg); border-radius: 12px; display: grid; gap: 12px; } .ac-note p { font-size: 14px; color: var(--text); }
+@media (max-width: 900px) {
+  .ac-grid { grid-template-columns: 1fr; gap: 20px; }
+  .ac-nav { position: static; display: flex; overflow-x: auto; gap: 6px; scrollbar-width: none; }
+  .ac-nav a { flex-shrink: 0; border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; background: var(--bg); }
+}
+@media (max-width: 520px) { .ac-hero { flex-direction: column; align-items: flex-start; } }
+
+.ac-pkname { flex: 1 1 220px; min-width: 0; height: 40px; padding: 0 12px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--bg); color: var(--text); font: inherit; font-size: 14.5px; }
+.ac-pkname:focus { outline: 0; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(var(--accent-rgb), .13); }

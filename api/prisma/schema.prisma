@@ -1,0 +1,249 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+// Which kind of app created the session. Stored server-side, so a client cannot fake it afterwards.
+enum Client {
+  WEB
+  MOBILE
+}
+
+model User {
+  id           String    @id @default(uuid(7))
+  email        String    @unique
+  name         String?
+  passwordHash String
+  role         Role      @default(USER)
+  disabled     Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  sessions     Session[]
+  downloads    DownloadEvent[]
+  ratings      Rating[]
+  emailVerifiedAt DateTime?
+  emailTokens  EmailToken[]
+  collaborator CollaboratorApplication?
+  githubLink   GithubLink?
+  products     Product[]
+  passkeys     Passkey[]
+  passwordResets PasswordReset[]
+}
+
+// Only a SHA-256 hash of the session token is stored, so a database leak cannot be replayed as a login.
+model Session {
+  id         String   @id @default(uuid(7))
+  tokenHash  String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  expiresAt  DateTime
+  ip         String?
+  userAgent  String?
+  client     Client   @default(WEB)
+  device     String?  // mobile | tablet | desktop | unknown
+  label      String?  // e.g. "Chrome on Windows"
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model LoginEvent {
+  id        String   @id @default(uuid(7))
+  email     String
+  success   Boolean
+  reason    String?
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([email, createdAt])
+}
+
+// Who downloaded what, and when. Gives a per-user count and a trail if a build is ever questioned.
+model DownloadEvent {
+  id        String   @id @default(uuid(7))
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   String
+  version   String
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([product, createdAt])
+}
+
+// One rating per user per product. Only people who downloaded the product can rate it.
+model Rating {
+  id        String   @id @default(uuid(7))
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   String
+  stars     Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, product])
+  @@index([product])
+}
+
+// A pending "confirm this address" link. Only the SHA-256 of the token is stored. The token is bound to the
+// address it was sent to, so changing the email invalidates every older link.
+model EmailToken {
+  id        String   @id @default(uuid(7))
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email     String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// Forgot-password links. Only a SHA-256 hash is stored; one link per account, valid for one hour.
+model PasswordReset {
+  id        String   @id @default(uuid(7))
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ProductStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  UNPUBLISHED
+}
+
+enum ReleaseStatus {
+  PENDING
+  FETCHING
+  APPROVED
+  REJECTED
+  FAILED
+}
+
+// A user asking to publish apps on the store. An admin must approve before they can submit anything.
+model CollaboratorApplication {
+  id            String       @id @default(uuid(7))
+  userId        String       @unique
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  publisherName String
+  github        String
+  website       String?
+  about         String
+  status        ReviewStatus @default(PENDING)
+  reviewNote    String?
+  reviewedAt    DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+// An app published by a collaborator. Visible only while APPROVED and with at least one APPROVED release.
+model Product {
+  id           String        @id @default(uuid(7))
+  slug         String        @unique
+  ownerId      String
+  owner        User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name         String
+  tagline      String
+  summary      String
+  category     String
+  platform     String
+  license      String?
+  requirements String?
+  // Long description (Markdown): imported from the repository's README or written by the developer.
+  details      String?
+  // Optional card/page picture chosen by the developer (an image hosted on GitHub). Else the description's first image, else GitHub's preview card.
+  cover        String?
+  repo         String
+  // Listed from GitHub by us (not submitted by the author): the download button points at the project's own release page.
+  external     Boolean       @default(false)
+  stars        Int?
+  author       String?
+  status       ProductStatus @default(PENDING)
+  reviewNote   String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  releases     Release[]
+
+  @@index([ownerId])
+  @@index([status])
+}
+
+// One GitHub release asset submitted for a product. An admin approves it, then the server fetches the file,
+// records its SHA-256 and serves it from private storage.
+model Release {
+  id          String        @id @default(uuid(7))
+  productId   String
+  product     Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tag         String
+  assetId     String
+  assetName   String
+  assetSize   Int
+  assetUrl    String
+  releaseUrl  String
+  status      ReleaseStatus @default(PENDING)
+  sha256      String?
+  filePath    String?
+  note        String?
+  error       String?
+  createdAt   DateTime      @default(now())
+  approvedAt  DateTime?
+
+  @@index([productId])
+  @@index([status])
+}
+
+// A GitHub account the user proved they control by signing in to GitHub (OAuth). No access token is kept.
+model GithubLink {
+  id        String   @id @default(uuid(7))
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  githubId  String   @unique
+  login     String
+  createdAt DateTime @default(now())
+}
+
+// A passkey (WebAuthn credential). Only the public key is stored: the private key never leaves the user's device.
+model Passkey {
+  id           String    @id @default(uuid(7))
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credentialId String    @unique // base64url
+  publicKey    Bytes
+  counter      Int       @default(0)
+  transports   String[]
+  deviceType   String // singleDevice | multiDevice
+  backedUp     Boolean   @default(false)
+  name         String
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime?
+
+  @@index([userId])
+}

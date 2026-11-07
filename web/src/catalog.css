@@ -1,0 +1,37 @@
+.cat-head { background: var(--bg-2); border-bottom: 1px solid var(--line); padding: 28px 0 36px; }
+.cat-head h1 { font-size: clamp(28px, 4vw, 40px); letter-spacing: -.035em; } .cat-head p { color: var(--muted); margin-top: 6px; font-size: 16.5px; }
+.cat { padding-top: 28px; }
+.cat__bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 24px; }
+.cat__search { display: flex; align-items: center; gap: 8px; flex: 1 1 260px; max-width: 380px; height: 42px; padding: 0 14px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--bg); color: var(--muted); }
+.cat__search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(var(--accent-rgb), .13); } .cat__search svg { width: 17px; height: 17px; }
+.cat__search input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font: inherit; color: var(--text); }
+.seg { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--line-2); border-radius: 11px; background: var(--bg-2); }
+.seg button { padding: 6px 14px; border-radius: 8px; color: var(--muted); font-weight: 600; font-size: 14px; } .seg button.on { background: var(--bg); color: var(--text); box-shadow: var(--shadow-1); }
+.cat__n { margin-left: auto; color: var(--muted); font-size: 14px; }
+.cat__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+.cc { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 20px; overflow: hidden; background: var(--bg); box-shadow: var(--shadow-1); transition: box-shadow .2s, translate .2s, border-color .2s; }
+.cc:hover { box-shadow: var(--shadow-2); translate: 0 -2px; border-color: var(--line-2); }
+.cc__vis { display: block; padding: 24px; } .cc__vis--wall { background: var(--wall); } .cc__vis .nshot { border-radius: 10px; }
+.cc__vis--tile { display: grid; place-items: center; align-content: center; gap: 10px; min-height: 148px; background: linear-gradient(135deg, var(--accent-soft), var(--bg-3)); color: var(--accent); }
+.cc__vis--tile span { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); font-size: 26px; font-weight: 800; }
+.cc__vis--tile b { color: var(--text); font-size: 15px; }
+.cc__body { padding: 20px 22px 22px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.cc h2 { font-size: 21px; letter-spacing: -.03em; } .cc h2 a:hover { color: var(--accent); } .cc__tag { color: var(--muted); font-size: 15px; }
+.cc__foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--line); }
+.cc__price { display: grid; line-height: 1.25; } .cc__price b { font-size: 20px; color: var(--ok); } .cc__price span { font-size: 13px; color: var(--muted); }
+.cc--soon { justify-content: center; align-items: flex-start; gap: 10px; padding: 32px; border-style: dashed; background: var(--bg-2); box-shadow: none; }
+.cc--soon:hover { translate: none; box-shadow: none; } .cc--soon p { color: var(--muted); }
+.cc__soon-i { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; background: var(--bg); border: 1px solid var(--line); color: var(--muted); } .cc__soon-i svg { width: 22px; height: 22px; }
+.cat__empty { text-align: center; padding: 64px 0; display: grid; gap: 12px; justify-items: center; } .cat__empty p { color: var(--muted); }
+.cc__by { color: var(--muted); font-size: 13.5px; margin-top: -2px; }
+.cat__sort { height: 42px; padding: 0 30px 0 12px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--bg); color: var(--text); font: inherit; font-size: 14.5px; }
+.cat__bar { row-gap: 10px; }
+.cc__by a { color: var(--text); font-weight: 550; } .cc__by a:hover { color: var(--accent); text-decoration: underline; }
+.cat__grid { scroll-margin-top: 90px; }
+
+/* Filter bar stays pinned under the header while the list scrolls */
+.cat__bar { position: sticky; top: 68px; z-index: 50; margin-bottom: 12px; padding: 12px 0; background: var(--bg); border-bottom: 1px solid var(--line); }
+.cat__grid { margin-top: 24px; scroll-margin-top: 170px; }
+@media (max-width: 860px) { .cat__bar { top: 60px; } }
+
+.cc__vis--img { padding: 0; aspect-ratio: 2 / 1; background: var(--bg-3); overflow: hidden; } .cc__vis--img img { display: block; width: 100%; height: 100%; object-fit: cover; }

@@ -1,0 +1,3 @@
+.lp { min-height: 70svh; display: grid; place-items: center; padding: 48px var(--pad); background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(var(--accent-rgb), .10), transparent 70%), var(--bg-2); }
+.lp__card { width: min(440px, 100%); padding: clamp(26px, 5vw, 40px); border: 1px solid var(--line); border-radius: 22px; background: var(--bg); box-shadow: var(--shadow-2); }
+.lp__card h1 { font-size: 26px; margin: 22px 0 6px; } .lp__card > p { color: var(--muted); margin-bottom: 22px; }
