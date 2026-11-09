@@ -33,6 +33,7 @@ const forgotByIp = new RateLimiter(5, 60 * MINUTE)
 const forgotByEmail = new RateLimiter(3, 60 * MINUTE)
 const resetByIp = new RateLimiter(10, 15 * MINUTE)
 const ratingsByUser = new RateLimiter(20, 60 * MINUTE)
+const repliesByUser = new RateLimiter(30, 60 * MINUTE)
 
 // Apache sets X-Real-IP from the real TCP peer. This process only listens on 127.0.0.1.
 const clientIp = (req: Request) => req.headers.get('x-real-ip')?.slice(0, 64) || 'unknown'
@@ -58,6 +59,13 @@ const webGuard = ({ request, status }: { request: Request; status: (code: number
   if (origin ? !config.origins.includes(origin) : !isRead) return status(403, { error: 'forbidden' })
   if (request.headers.get('x-requested-with') !== 'fetch') return status(403, { error: 'forbidden' })
 }
+
+/** Who answers reviews of a product: its uploader, or an admin for CXXS's own products. */
+const productAuthor = async (slug: string) => {
+  const p = await prisma.product.findUnique({ where: { slug }, select: { ownerId: true, author: true, owner: { select: { collaborator: { select: { publisherName: true } } } } } })
+  return p ? { ownerId: p.ownerId as string | null, name: p.owner.collaborator?.publisherName ?? p.author ?? 'Developer' } : { ownerId: null as string | null, name: 'CXXS' }
+}
+const mayReply = (a: { ownerId: string | null }, u: { id: string; role: string }) => (a.ownerId ? u.id === a.ownerId : u.role === 'ADMIN')
 
 const app = new Elysia({ prefix: '/api', serve: { maxRequestBodySize: 64 * 1024 } /* room for a full app description; everything else is tiny */ })
   .onRequest(({ set }) => {
@@ -401,6 +409,7 @@ const app = new Elysia({ prefix: '/api', serve: { maxRequestBodySize: 64 * 1024 
       .get('/products/:slug/stats', async ({ request, params, status }) => {
         if (!(await productKnown(params.slug))) return status(404, { error: 'not_found' })
         const product = params.slug
+        const author = await productAuthor(product)
         const [total, byUser, groups, recent] = await Promise.all([
           prisma.downloadEvent.count({ where: { product } }),
           prisma.downloadEvent.groupBy({ by: ['userId'], where: { product } }),
@@ -423,9 +432,10 @@ const app = new Elysia({ prefix: '/api', serve: { maxRequestBodySize: 64 * 1024 
           users: byUser.length,
           downloads: total,
           rating: { avg: Math.round(avg * 10) / 10, count, dist },
-          reviews: recent.map((r) => ({ stars: r.stars, comment: r.comment, name: r.user.name?.split(' ')[0] ?? 'Anonymous', at: r.updatedAt })),
+          reviews: recent.map((r) => ({ id: r.id, stars: r.stars, comment: r.comment, name: r.user.name?.split(' ')[0] ?? 'Anonymous', at: r.updatedAt, reply: r.reply ? { text: r.reply, by: author.name, at: r.repliedAt } : null })),
           mine,
           canRate,
+          canReply: !!s && mayReply(author, s.user),
         }
       })
       // Rating needs an account and a real download, so the score cannot be inflated by throwaway sign-ups.
@@ -440,15 +450,43 @@ const app = new Elysia({ prefix: '/api', serve: { maxRequestBodySize: 64 * 1024 
           const got = await prisma.downloadEvent.count({ where: { userId: s.user.id, product: params.slug } })
           if (!got) return status(403, { error: 'download_first' })
           const comment = body.comment?.replace(/[\u0000-\u001f\u007f]+/g, ' ').trim().slice(0, 280) || null
+          const prev = await prisma.rating.findUnique({ where: { userId_product: { userId: s.user.id, product: params.slug } } })
           await prisma.rating.upsert({
             where: { userId_product: { userId: s.user.id, product: params.slug } },
             create: { userId: s.user.id, product: params.slug, stars: body.stars, comment },
-            update: { stars: body.stars, comment },
+            // A reply answers one specific comment, so it goes when the comment is rewritten.
+            update: { stars: body.stars, comment, ...(prev && prev.comment !== comment ? { reply: null, repliedAt: null } : {}) },
           })
           return { ok: true }
         },
         { body: t.Object({ stars: t.Integer({ minimum: 1, maximum: 5 }), comment: t.Optional(t.String({ maxLength: 400 })) }) },
       )
+      // The uploader (or an admin, for CXXS's own products) answers a written review in public.
+      .put(
+        '/products/:slug/ratings/:id/reply',
+        async ({ request, params, body, status }) => {
+          const s = await getSessionUser(request.headers.get('cookie'))
+          if (!s) return status(401, { error: 'unauthenticated' })
+          if (!(await productKnown(params.slug))) return status(404, { error: 'not_found' })
+          if (!mayReply(await productAuthor(params.slug), s.user)) return status(403, { error: 'not_author' })
+          if (repliesByUser.blockedFor(s.user.id) > 0) return status(429, { error: 'too_many_requests' })
+          repliesByUser.add(s.user.id)
+          const text = body.text.replace(/[\u0000-\u0009\u000b-\u001f\u007f]+/g, ' ').trim().slice(0, 500)
+          if (!text) return status(400, { error: 'invalid_input', message: 'Write a reply first.' })
+          const r = await prisma.rating.updateMany({ where: { id: params.id, product: params.slug, comment: { not: null } }, data: { reply: text, repliedAt: new Date() } })
+          if (!r.count) return status(404, { error: 'not_found' })
+          return { ok: true }
+        },
+        { body: t.Object({ text: t.String({ minLength: 1, maxLength: 800 }) }) },
+      )
+      .delete('/products/:slug/ratings/:id/reply', async ({ request, params, status }) => {
+        const s = await getSessionUser(request.headers.get('cookie'))
+        if (!s) return status(401, { error: 'unauthenticated' })
+        if (!(await productKnown(params.slug))) return status(404, { error: 'not_found' })
+        if (!mayReply(await productAuthor(params.slug), s.user)) return status(403, { error: 'not_author' })
+        await prisma.rating.updateMany({ where: { id: params.id, product: params.slug }, data: { reply: null, repliedAt: null } })
+        return { ok: true }
+      })
       .delete('/products/:slug/rating', async ({ request, params, status }) => {
         const s = await getSessionUser(request.headers.get('cookie'))
         if (!s) return status(401, { error: 'unauthenticated' })

@@ -156,12 +156,62 @@ export function RatingPanel({ slug, name }) {
 
       {!!s?.reviews.length && (
         <ul className="rate__list">
-          {s.reviews.map((r, i) => (
-            <li key={i}><Stars value={r.stars} size={13} /><p>{r.comment}</p><span className="mono">{r.name}</span></li>
+          {s.reviews.map((r) => (
+            <li key={r.id}>
+              <Stars value={r.stars} size={13} /><p>{r.comment}</p><span className="mono">{r.name}</span>
+              <Reply slug={slug} review={r} canReply={!!s.canReply} onChange={load} />
+            </li>
           ))}
         </ul>
       )}
     </div>
+  )
+}
+
+/** The author's public answer under a review, with a small editor for the author. */
+function Reply({ slug, review, canReply, onChange }) {
+  const { say } = useAuth()
+  const [open, setOpen] = useState(false)
+  const [text, setText] = useState(review.reply?.text ?? '')
+  const [busy, setBusy] = useState(false)
+  const api = `/api/web/products/${slug}/ratings/${review.id}/reply`
+  const save = async () => {
+    if (!text.trim()) return say('Write a reply first.', 'err')
+    setBusy(true)
+    try {
+      const r = await fetch(api, { method: 'PUT', credentials: 'include', headers: H, body: JSON.stringify({ text: text.trim() }) })
+      if (r.status === 429) return say('Too many replies. Try again later.', 'err')
+      if (!r.ok) throw new Error()
+      setOpen(false); say('Reply posted.'); await onChange()
+    } catch { say('Could not save your reply.', 'err') } finally { setBusy(false) }
+  }
+  const remove = async () => {
+    if (!confirm('Delete your reply?')) return
+    setBusy(true)
+    try { await fetch(api, { method: 'DELETE', credentials: 'include', headers: H }); setOpen(false); setText(''); say('Reply deleted.'); await onChange() } finally { setBusy(false) }
+  }
+  return (
+    <>
+      {review.reply && !open && (
+        <div className="rate__reply">
+          <b className="mono">Reply from {review.reply.by}</b>
+          <p>{review.reply.text}</p>
+        </div>
+      )}
+      {canReply && !open && (
+        <button className="rate__link rate__rbtn" onClick={() => { setText(review.reply?.text ?? ''); setOpen(true) }}>{review.reply ? 'Edit reply' : 'Reply'}</button>
+      )}
+      {canReply && open && (
+        <div className="rate__rform">
+          <textarea value={text} onChange={(e) => setText(e.target.value)} maxLength={500} rows={3} autoFocus placeholder="Reply to this review (public)" aria-label="Reply" />
+          <div className="rate__act">
+            <button className="btn-p" onClick={save} disabled={busy || !text.trim()}><span>{review.reply ? 'Save reply' : 'Post reply'}</span></button>
+            <button className="btn-g" onClick={() => setOpen(false)} disabled={busy}>Cancel</button>
+            {review.reply && <button className="btn-g" onClick={remove} disabled={busy}>Delete</button>}
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 

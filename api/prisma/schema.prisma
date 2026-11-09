@@ -94,6 +94,9 @@ model Rating {
   product   String
   stars     Int
   comment   String?
+  // The product author's public answer to the comment (one per rating).
+  reply     String?
+  repliedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

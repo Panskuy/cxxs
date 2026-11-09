@@ -127,3 +127,11 @@ html.lm-open { overflow: hidden !important; }
 .lm__pk { width: 100%; padding: 11px 18px; margin-top: 10px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--bg); color: var(--text); font-weight: 600; font-size: 15px; transition: border-color .15s, background .15s; }
 .lm__pk:hover:not(:disabled) { border-color: var(--accent); background: var(--bg-2); } .lm__pk:disabled { opacity: .6; cursor: wait; }
 .lm__forgot { display: block; margin-top: 8px; text-align: right; font-size: 13px; }
+.rate__reply { margin-top: 4px; padding: 10px 12px; border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; background: var(--bg-2); display: grid; gap: 4px; }
+.rate__reply b { font-size: 11.5px; letter-spacing: .04em; color: var(--accent); }
+.rate__list .rate__reply p { font-size: 14px; white-space: pre-line; }
+.rate__rbtn { justify-self: start; font-size: 13px; }
+.rate__rform { display: grid; gap: 8px; margin-top: 4px; }
+.rate__rform textarea { width: 100%; resize: vertical; min-height: 72px; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--bg); color: var(--text); font: inherit; font-size: 14px; }
+.rate__rform textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.rate__rform .btn-p span { color: inherit; font: inherit; }

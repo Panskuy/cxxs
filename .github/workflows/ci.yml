@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# The workflow can only read the repository. No secrets are used.
+permissions:
+  contents: read
+
+# A newer push cancels the older run of the same branch.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API (types)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+      # Prisma needs Node 20.19+ / 22.12+ while it installs.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      # The generated client is not committed (see .gitignore); tsc needs it.
+      - run: bunx prisma generate
+      - run: bunx prisma validate
+      - run: bunx tsc --noEmit
+
+  web:
+    name: Web (lint + build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      # Lint warnings are reported but do not fail the run; errors do.
+      - run: bunx oxlint
+      - run: bunx vite build
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Informational: a new advisory in a dependency must not block unrelated work.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - name: API (production dependencies)
+        working-directory: api
+        run: bun audit --prod
+      - name: Web (production dependencies)
+        working-directory: web
+        run: bun audit --prod
